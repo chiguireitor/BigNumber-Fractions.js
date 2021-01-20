@@ -11,12 +11,15 @@
     "url": "https://github.com/brandonrozek/Fraction.js/issues"
   },
   "scripts": {
-    "test": "node Tests.js"
+    "test": "nodemon Tests.js"
   },
   "keywords": [
     "fractions",
     "math"
   ],
   "author": "Brandon Rozek <hello@brandonrozek.com> (https://brandonrozek.com)",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "bignumber.js": "^9.0.1"
+  }
 }

@@ -1,43 +1,57 @@
-var Fraction = function() {
+const BigNumber = require('bignumber.js')
+
+function bnIsNaN(a) {
+	try {
+		let x = new BigNumber(a)
+
+		return x.isNaN()
+	} catch (e) {
+		return true
+	}
+}
+
+var Fraction = function(n, d) {
 	this.numerator;
 	this.denominator;
 
-	var numerator = 0;
-	var denominator = 1;
+	var numerator = new BigNumber(0);
+	var denominator = new BigNumber(1);
 	var frac;
 
 	//If two numbers-like arguments are passed into the function
-	if (!isNaN(arguments[0]) && !isNaN(arguments[1])) {
-		numerator = Number(arguments[0]);
-		denominator = Number(arguments[1]);
+	if (typeof(arguments[0]) !== 'undefined' && typeof(arguments[1]) !== 'undefined') {
+		numerator = new BigNumber(arguments[0]);
+		denominator = new BigNumber(arguments[1]);
 
 	}
 	//Only a single number is present
-	else if (!isNaN(arguments[0])) {
-		numerator = Number(arguments[0]);
-	}
-	//If a string is passed into the function
-	else if (Fraction.isString(arguments[0])) {
-		var number = arguments[0];
-		if (number.indexOf('/') != -1) {
-			numerator = Number(number.substring(0, number.indexOf('/')));
-			denominator = Number(number.substring(number.indexOf('/') + 1, number.length));
+	else if (typeof(arguments[0]) !== 'undefined') {
+		if (typeof(arguments[0]) === 'string') {
+			var number = arguments[0];
+
+			if (number.indexOf('/') != -1) {
+				numerator = new BigNumber(number.substring(0, number.indexOf('/')));
+				denominator = new BigNumber(number.substring(number.indexOf('/') + 1, number.length));
+			} else {
+				numerator = new BigNumber(number);
+			}
 		} else {
-			numerator = number;
+			numerator = new BigNumber(arguments[0]);
 		}
 	}
 	else {
 		throw new Error("Arguments invalid");
 	}
 
-	if (!Number.isInteger(numerator) || !Number.isInteger(denominator)) {
-			if (!Number.isInteger(numerator)) { numerator = Fraction.decimalToFraction(numerator); }
-			if (!Number.isInteger(denominator)) { denominator = Fraction.decimalToFraction(denominator); }
+	if (!numerator.isInteger() || !denominator.isInteger()) {
+			if (!numerator.isInteger()) { numerator = Fraction.decimalToFraction(numerator); }
+			if (!denominator.isInteger()) { denominator = Fraction.decimalToFraction(denominator); }
 			frac = Fraction.divide(numerator, denominator);
 			numerator = frac.numerator;
 			denominator = frac.denominator;
 	}
-	if (denominator == 0) {
+
+	if (denominator.isZero()) {
 		throw new Error("Cannot divide by zero");
 	}
 
@@ -84,8 +98,8 @@ Fraction.add = function(frac1, frac2) {
 	frac2 = Fraction.toFraction(frac2)
 
 	var newFrac = frac1;
-	newFrac.numerator = frac1.numerator * frac2.denominator + frac1.denominator * frac2.numerator;
-	newFrac.denominator = frac1.denominator * frac2.denominator;
+	newFrac.numerator = frac1.numerator.multipliedBy(frac2.denominator).plus(frac1.denominator.multipliedBy(frac2.numerator));
+	newFrac.denominator = frac1.denominator.multipliedBy(frac2.denominator);
 	return Fraction.simplify(newFrac);
 }
 Fraction.subtract = function(frac1, frac2) {
@@ -94,8 +108,8 @@ Fraction.subtract = function(frac1, frac2) {
 	frac2 = Fraction.toFraction(frac2);
 
 	var newFrac = frac1;
-	newFrac.numerator = frac1.numerator * frac2.denominator - frac1.denominator * frac2.numerator;
-	newFrac.denominator = frac1.denominator * frac2.denominator;
+	newFrac.numerator = frac1.numerator.multipliedBy(frac2.denominator).minus(frac1.denominator.multipliedBy(frac2.numerator));
+	newFrac.denominator = frac1.denominator.multipliedBy(frac2.denominator);
 	return Fraction.simplify(newFrac);
 }
 Fraction.multiply = function(frac1, frac2) {
@@ -104,8 +118,8 @@ Fraction.multiply = function(frac1, frac2) {
 	frac2 = Fraction.toFraction(frac2);
 
 	var newFrac = frac1;
-	newFrac.numerator = frac1.numerator * frac2.numerator;
-	newFrac.denominator = frac1.denominator * frac2.denominator;
+	newFrac.numerator = frac1.numerator.multipliedBy(frac2.numerator);
+	newFrac.denominator = frac1.denominator.multipliedBy(frac2.denominator);
 	return Fraction.simplify(newFrac);
 }
 Fraction.divide = function(frac1, frac2) {
@@ -114,8 +128,8 @@ Fraction.divide = function(frac1, frac2) {
 	frac2 = Fraction.toFraction(frac2);
 
 	var newFrac = frac1;
-	newFrac.numerator = frac1.numerator * frac2.denominator;
-	newFrac.denominator = frac1.denominator * frac2.numerator;
+	newFrac.numerator = frac1.numerator.multipliedBy(frac2.denominator);
+	newFrac.denominator = frac1.denominator.multipliedBy(frac2.numerator);
 	return Fraction.simplify(newFrac);
 }
 
@@ -124,31 +138,34 @@ Fraction.simplify = function(frac) {
 	frac = Fraction.toFraction(frac);
 
 	var gcd = Fraction.greatestCommonDivisor(frac.numerator, frac.denominator);
-	if (gcd == 1) { return frac; }
-	frac.numerator /= gcd;
-	frac.denominator /= gcd;
+	if (gcd.isEqualTo(1)) { return frac; }
+	frac.numerator = frac.numerator.dividedBy(gcd);
+	frac.denominator = frac.denominator.dividedBy(gcd);
 	return frac;
 }
 Fraction.greatestCommonDivisor = function(num1, num2) {
 	var greater;
 	var lesser;
 
-	num1 = Math.abs(num1);
-	num2 = Math.abs(num2);
-	greater = Math.max(num1, num2);
-	lesser = Math.min(num1, num2);
+	if (!BigNumber.isBigNumber(num1)) num1 = new BigNumber(num1)
+	if (!BigNumber.isBigNumber(num2)) num2 = new BigNumber(num2)
 
-	while (lesser != 0) {
+	num1 = num1.abs();
+	num2 = num2.abs();
+	greater = BigNumber.max(num1, num2);
+	lesser = BigNumber.min(num1, num2);
+
+	while (!lesser.isZero()) {
 		var t = lesser;
-		lesser = greater % lesser;
+		lesser = greater.modulo(lesser);
 		greater = t;
 	}
 	return greater;
 }
 Fraction.toString = function(frac) {
 	Fraction.correctArgumentLength(1, arguments.length);
-	if (frac.denominator == 1) { return "" + frac.numerator; }
-	return "" + frac.numerator + "/" + frac.denominator;
+	if (frac.denominator.isEqualTo(1)) { return "" + frac.numerator.toString(); }
+	return "" + frac.numerator.toString() + "/" + frac.denominator.toString();
 }
 Fraction.equals = function(frac1, frac2) {
 	Fraction.correctArgumentLength(2, arguments.length);
@@ -157,12 +174,12 @@ Fraction.equals = function(frac1, frac2) {
 
 	frac1 = Fraction.simplify(frac1);
 	frac2 = Fraction.simplify(frac2);
-	return frac1.numerator == frac2.numerator && frac1.denominator == frac2.denominator;
+	return frac1.numerator.isEqualTo(frac2.numerator) && frac1.denominator.isEqualTo(frac2.denominator);
 }
 Fraction.valueOf = function(frac) {
 	Fraction.correctArgumentLength(1, arguments.length);
 	frac = Fraction.toFraction(frac);
-	return frac.numerator / frac.denominator;
+	return frac.numerator.dividedBy(frac.denominator).toNumber();
 }
 Fraction.correctArgumentLength = function(ideal, actual) {
 	if (ideal != actual) { throw new Error("" + ideal + " arguments needed"); }
@@ -187,7 +204,7 @@ Fraction.toFraction = function(x) {
 }
 Fraction.decimalToFraction = function(x) {
 	Fraction.correctArgumentLength(1, arguments.length);
-	if (isNaN(x)) { throw new Error("Argument invalid") }
+	if (bnIsNaN(x)) { throw new Error("Argument invalid") }
 
 	x = String(x);
 	var decLocation = x.indexOf('.');
