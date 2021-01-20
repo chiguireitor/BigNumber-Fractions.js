@@ -1,14 +1,14 @@
 {
-  "name": "fractions",
+  "name": "bignumber-fractions",
   "version": "1.0.0",
-  "description": "A library to help do more precise fractional math",
+  "description": "A library to help do more precise fractional math, using bignumber.js",
   "main": "Fraction.js",
   "repository": {
     "type": "git",
-    "url": "https://github.com/brandonrozek/Fraction.js"
+    "url": "https://github.com/chiguireitor/BigNumber-Fraction.js"
   },
   "bugs": {
-    "url": "https://github.com/brandonrozek/Fraction.js/issues"
+    "url": "https://github.com/chiguireitor/BigNumber-Fraction.js/issues"
   },
   "scripts": {
     "test": "nodemon Tests.js"
@@ -17,7 +17,10 @@
     "fractions",
     "math"
   ],
-  "author": "Brandon Rozek <hello@brandonrozek.com> (https://brandonrozek.com)",
+  "contributors": [
+    "Brandon Rozek <hello@brandonrozek.com> (https://brandonrozek.com)",
+    "John Villar <contact@chig.uno> (https://chig.uno)"
+  ],
   "license": "MIT",
   "dependencies": {
     "bignumber.js": "^9.0.1"
